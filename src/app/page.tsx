@@ -20,6 +20,8 @@ type ChatMessage = {
   inserted_at: string;
 };
 
+const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL;
+
 export default function Home() {
   const [session, setSession] = useState<any>(null);
   const router = useRouter();
@@ -34,6 +36,9 @@ export default function Home() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+
+  const [showTour, setShowTour] = useState(false);
+  const [tourType, setTourType] = useState<"add" | "delete" | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -139,18 +144,18 @@ export default function Home() {
   async function sendMessage() {
     if (!newMessage.trim()) return;
 
-    // Guardar el mensaje del usuario en DB
     await supabase.from("chat_messages").insert([
       { role: "user", message: newMessage, user_email: userEmail }
     ]);
 
     setNewMessage("");
-
-    // Refrescar mensajes
     fetchMessages();
 
-    // Llamar al backend y enviar el correo como campo
-    const res = await fetch("http://localhost:8000/chat-logic/chat-get", {
+    if (!CHAT_API_URL) {
+      console.error("CHAT_API_URL is not defined.");
+      return;
+    }
+    const res = await fetch(CHAT_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: newMessage, user_email: userEmail }),
@@ -158,7 +163,6 @@ export default function Home() {
 
     const data = await res.json();
 
-    // Guardar respuesta del "assistant"
     await supabase.from("chat_messages").insert([
       { role: "assistant", message: data.mensaje, user_email: userEmail }
     ]);
@@ -174,6 +178,22 @@ export default function Home() {
       typeof data.WebStrategy.NavigateTo === "string"
     ) {
       router.push(data.WebStrategy.NavigateTo);
+    }
+
+    // Mostrar tour si el backend lo indica
+    if (
+      data.WebStrategy &&
+      typeof data.WebStrategy === "object" &&
+      "Marcador" in data.WebStrategy
+    ) {
+      if (data.WebStrategy.Marcador === "task_add") {
+        setTourType("add");
+        setShowTour(true);
+      }
+      if (data.WebStrategy.Marcador === "delete_chat") {
+        setTourType("delete");
+        setShowTour(true);
+      }
     }
   }
 
@@ -191,51 +211,93 @@ export default function Home() {
 
   return (
     <main className="min-h-screen h-screen flex flex-row" style={{ background: "#121212" }}>
-      {/* Panel Izquierdo - ToDo List */}
-      <div className="w-1/2 h-full p-6 flex flex-col" style={{ background: "#F3F4F6" }}>
-        {/* Formulario nueva tarea */}
-        <div
-  className="flex flex-col gap-2 mb-6 w-full p-4 rounded"
-  style={{ background: "#F5F5F5" }} // Fondo gris suave
->
-  <h2 className="text-2xl font-bold mb-2" style={{ color: "#424242" }}>Add a task</h2>
-  <input
-    type="text"
-    value={newTask}
-    onChange={(e) => setNewTask(e.target.value)}
-    placeholder="Nueva tarea..."
-    className="p-2 border rounded"
-    style={{ color: "#424242" }} // Letras gris oscuro
-  />
-  <textarea
-    value={newContexto}
-    onChange={(e) => setNewContexto(e.target.value)}
-    placeholder="Contexto o notas..."
-    className="p-2 border rounded"
-    style={{ color: "#424242" }} // Letras gris oscuro
-  />
-  <select
-    value={newPrioridad}
-    onChange={(e) => setNewPrioridad(Number(e.target.value))}
-    className="p-2 border rounded"
-    style={{ color: "#424242" }} // Letras gris oscuro
-  >
-    <option value={1}>Alta</option>
-    <option value={2}>Media</option>
-    <option value={3}>Baja</option>
-  </select>
-  <button
-    onClick={addTask}
-    className="px-4 py-2 rounded font-bold"
-    style={{ background: "#2196F3", color: "#fff", fontWeight: "bold" }} // Azul brillante y letras en negritas
-  >
-    Agregar
-  </button>
-</div>
+      {/* Left Panel - ToDo List */}
+      <div className="w-1/2 h-full p-6 flex flex-col" style={{ background: "#F3F4F6", position: "relative" }}>
+        {/* Manual Tour Tooltip for Add Task */}
+        {showTour && tourType === "add" && (
+          <div
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              zIndex: 100,
+              background: "#fff",
+              color: "#121212",
+              border: "2px solid #2196F3",
+              borderRadius: 8,
+              padding: "16px 20px",
+              boxShadow: "0 4px 16px rgba(33,150,243,0.15)",
+              maxWidth: 320
+            }}
+          >
+            <strong>Quick tip:</strong>
+            <div style={{ marginTop: 8 }}>
+              Fill in the task details below and click <b>Add</b> to create your task!
+            </div>
+            <button
+              style={{
+                marginTop: 12,
+                background: "#2196F3",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                padding: "6px 16px",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+              onClick={() => setShowTour(false)}
+            >
+              Got it!
+            </button>
+          </div>
+        )}
 
-        {/* Lista de tareas con scroll, ocupa todo el alto disponible */}
+        {/* New Task Form */}
+        <div
+          className="flex flex-col gap-2 mb-6 w-full p-4 rounded"
+          style={{ background: "#F5F5F5" }}
+        >
+          <h2 className="text-2xl font-bold mb-2" style={{ color: "#424242" }}>Add a task</h2>
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="Task title..."
+            className="p-2 border rounded"
+            style={{ color: "#424242" }}
+          />
+          <textarea
+            value={newContexto}
+            onChange={(e) => setNewContexto(e.target.value)}
+            placeholder="Context or notes..."
+            className="p-2 border rounded"
+            style={{ color: "#424242" }}
+          />
+          <select
+            value={newPrioridad}
+            onChange={(e) => setNewPrioridad(Number(e.target.value))}
+            className="p-2 border rounded"
+            style={{ color: "#424242" }}
+          >
+            <option value={1}>High</option>
+            <option value={2}>Medium</option>
+            <option value={3}>Low</option>
+          </select>
+          <button
+            onClick={() => {
+              addTask();
+              setShowTour(false); // Oculta el tour al agregar la tarea
+            }}
+            className="px-4 py-2 rounded font-bold"
+            style={{ background: "#2196F3", color: "#fff", fontWeight: "bold" }}
+          >
+            Add
+          </button>
+        </div>
+
+        {/* Task List with scroll */}
         <div className="w-full flex-1 overflow-y-auto">
-          {/* Título arriba del listado */}
+          {/* Title above the list */}
           <div className="flex items-center gap-2 mb-4">
             <h2 className="text-xl font-bold" style={{ color: "#121212" }}>Tasks</h2>
             <span className="text-2xl">👉</span>
@@ -247,7 +309,7 @@ export default function Home() {
                 className="p-4 mb-3 rounded shadow flex flex-col gap-2"
                 style={{ background: "#E3F2FD", color: "#121212" }}
               >
-                {/* Header con ID y título */}
+                {/* Header with ID and title */}
                 <div className="flex justify-between items-center">
                   <span
                     className="text-sm font-bold"
@@ -270,34 +332,35 @@ export default function Home() {
                   <button
                     onClick={() => deleteTask(task.id)}
                     className="text-red-400 font-bold"
+                    title="Delete"
                   >
                     ✕
                   </button>
                 </div>
 
-                {/* Contexto editable */}
+                {/* Editable context */}
                 <textarea
                   defaultValue={task.contexto ?? ""}
                   onBlur={(e) => updateContexto(task.id, e.target.value)}
-                  placeholder="Agregar contexto..."
+                  placeholder="Add context..."
                   className="w-full p-2 border rounded"
-                  style={{ background: "#90CAF9", color: "#121212" }} // Azul pastel más fuerte
+                  style={{ background: "#90CAF9", color: "#121212" }}
                 />
 
-                {/* Selector de prioridad */}
+                {/* Priority selector */}
                 <div>
-                  <label className="mr-2" style={{ color: "#9E9E9E" }}>Prioridad:</label>
+                  <label className="mr-2" style={{ color: "#9E9E9E" }}>Priority:</label>
                   <select
                     value={task.prioridad}
                     onChange={(e) =>
                       updatePrioridad(task.id, Number(e.target.value))
                     }
                     className="p-1 border rounded"
-                    style={{ background: "#90CAF9", color: "#121212" }} // Azul pastel más fuerte
+                    style={{ background: "#90CAF9", color: "#121212" }}
                   >
-                    <option value={1}>Alta</option>
-                    <option value={2}>Media</option>
-                    <option value={3}>Baja</option>
+                    <option value={1}>High</option>
+                    <option value={2}>Medium</option>
+                    <option value={3}>Low</option>
                   </select>
                 </div>
               </li>
@@ -306,25 +369,66 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Panel Derecho - Chat */}
-      <div className="w-1/2 h-full flex flex-col border-l p-4" style={{ background: "#F5F5F5" }}>
-        {/* Título y figuritas arriba del chat */}
-        <div className="flex items-center gap-3 mb-2">
+      {/* Right Panel - Chat */}
+      <div className="w-1/2 h-full flex flex-col border-l p-4" style={{ background: "#F5F5F5", position: "relative" }}>
+        {/* Title and icons above chat */}
+        <div className="flex items-center gap-3 mb-2" style={{ position: "relative" }}>
           <span className="text-xl font-bold" style={{ color: "#121212" }}>
             Page Assistant
           </span>
           <span className="text-2xl">💬</span>
           <span className="text-2xl ml-auto">🤖</span>
           <button
+            id="delete-chat-btn"
             onClick={deleteConversation}
             className="ml-4 px-3 py-1 rounded font-bold"
             style={{ background: "#D32F2F", color: "#fff" }}
-            title="Borrar conversación"
+            title="Delete conversation"
           >
             🗑️
           </button>
+          {/* Manual Tour Tooltip for Delete Chat */}
+          {showTour && tourType === "delete" && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: 8,
+                background: "#fff",
+                color: "#121212",
+                border: "2px solid #D32F2F",
+                borderRadius: 8,
+                padding: "16px 20px",
+                boxShadow: "0 4px 16px rgba(211,47,47,0.15)",
+                maxWidth: 320,
+                textAlign: "right",
+                zIndex: 100
+              }}
+            >
+              <strong>Quick tip:</strong>
+              <div style={{ marginTop: 8 }}>
+                To delete the entire conversation, click the <b>trash</b> button!
+              </div>
+              <button
+                style={{
+                  marginTop: 12,
+                  background: "#D32F2F",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "6px 16px",
+                  fontWeight: "bold",
+                  cursor: "pointer"
+                }}
+                onClick={() => setShowTour(false)}
+              >
+                Got it!
+              </button>
+            </div>
+          )}
         </div>
-        {/* Contenedor de mensajes con scroll, ocupa todo el alto disponible */}
+        {/* Chat messages container */}
         <div
           ref={chatContainerRef}
           className="w-full flex-1 overflow-y-auto mb-4 space-y-2 rounded p-2"
@@ -356,7 +460,7 @@ export default function Home() {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
+            placeholder="Type a message..."
             className="flex-1 p-2 border rounded"
             style={{
               background: "#FFFFFF",
@@ -375,7 +479,7 @@ export default function Home() {
             className="px-4 py-2 rounded"
             style={{ background: "#2196F3", color: "#fff", fontWeight: "bold" }}
           >
-            Enviar
+            Send
           </button>
         </div>
       </div>

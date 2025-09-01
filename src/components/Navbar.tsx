@@ -7,7 +7,7 @@ export default function Navbar() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    window.location.href = "/login"; // Redirige al login después de cerrar sesión
+    window.location.href = "/login";
   }
 
   return (
@@ -20,17 +20,17 @@ export default function Navbar() {
       </div>
       <div className="flex gap-6 items-center">
         <Link href="/" className="hover:text-blue-200 transition">
-          Tareas
+          Tasks
         </Link>
         <Link href="/terms" className="hover:text-blue-200 transition">
-          Términos
+          Terms
         </Link>
         <Link href="/privacy" className="hover:text-blue-200 transition">
-          Política
+          Privacy
         </Link>
         <button
           onClick={handleLogout}
-          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+          className="bg-[#D32F2F] text-white px-3 py-1 rounded font-bold hover:bg-red-700 transition"
         >
           Logout
         </button>

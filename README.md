@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Todo-AI
+
+Todo-AI is a productivity web app built with [Next.js](https://nextjs.org) and [Supabase](https://supabase.com) that combines a smart to-do list with an AI-powered chat assistant.  
+You can manage your tasks, set priorities, add context, and interact with an assistant to help organize your workflow.
+
+## Features
+
+- **Personal To-Do List:** Add, edit, complete, and delete tasks. Each task can have a priority and context.
+- **User Authentication:** Secure login using Supabase Auth.
+- **AI Chat Assistant:** Chat with an assistant to get help, automate actions, and receive tips.
+- **Contextual Actions:** The assistant can trigger UI tours and navigate the app based on your conversation.
+- **Persistent Data:** All tasks and chat history are stored per user in Supabase.
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2. **Configure environment variables:**
+   - Copy `.env.local.example` to `.env.local` and fill in your Supabase credentials and chat API endpoint.
+
+3. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+4. **Open [http://localhost:3000](http://localhost:3000) in your browser.**
+
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_CHAT_API_URL=http://localhost:8000/chat-logic/chat-get
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `src/app/page.tsx` — Main app page with to-do list and chat assistant.
+- `supabase` — Database and authentication.
+- `.env.local` — Environment variables (not committed).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+You can deploy this app on [Vercel](https://vercel.com/) or any platform that supports Next.js.  
+Make sure to set your environment variables in your deployment settings.
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+MIT
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For questions or contributions, feel free to open an issue or pull request on the [GitHub repository](https://github.com/yourusername/todo-ai).
