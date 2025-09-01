@@ -59,7 +59,7 @@ export default function Home() {
       fetchTasks();
       fetchMessages();
     }
-  }, [userEmail, fetchTasks, fetchMessages]);
+  }, [userEmail]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
