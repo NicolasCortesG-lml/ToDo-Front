@@ -28,7 +28,7 @@ export default function TermsPage() {
 
       <h2 className="text-xl font-semibold mt-6 mb-2">3. Limitación de responsabilidad</h2>
       <p className="mb-4">
-        Este servicio se proporciona "tal cual". No garantizamos que siempre
+        Este servicio se proporciona &quot;tal cual&quot;. No garantizamos que siempre
         esté disponible o libre de errores. No somos responsables de pérdidas o
         daños derivados del uso del servicio.
       </p>
@@ -51,6 +51,10 @@ export default function TermsPage() {
           nicolas.cortes.lml@gmail.com
         </a>
         .
+      </p>
+
+      <p>
+        By using this site, you agree to our &quot;Terms of Service&quot; and &quot;Privacy Policy&quot;.
       </p>
     </div>
   );

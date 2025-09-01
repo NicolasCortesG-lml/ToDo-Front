@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
+import { Session } from "@supabase/supabase-js";
 
 type Task = {
   id: string;
@@ -23,7 +24,7 @@ type ChatMessage = {
 const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL;
 
 export default function Home() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
 
   // Declara userEmail justo después de session
@@ -58,7 +59,7 @@ export default function Home() {
       fetchTasks();
       fetchMessages();
     }
-  }, [userEmail]);
+  }, [userEmail, fetchTasks, fetchMessages]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
